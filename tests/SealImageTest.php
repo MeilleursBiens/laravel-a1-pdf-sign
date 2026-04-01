@@ -4,6 +4,7 @@ namespace LSNepomuceno\LaravelA1PdfSign\Tests;
 
 use Illuminate\Support\Facades\File;
 use Intervention\Image\Drivers\Gd\Driver as GDDriver;
+use Intervention\Image\Encoders\PngEncoder;
 use Intervention\Image\ImageManager as IMG;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\CertificateOutputNotFoundException;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\FileNotFoundException;
@@ -35,10 +36,10 @@ class SealImageTest extends TestCase
 
         $image = SealImage::fromCert($cert);
 
-        $interventionImg = new IMG(driver: new GDDriver);
-        $interventionImg = $interventionImg->read($image);
+        $manager = IMG::usingDriver(GDDriver::class);
+        $interventionImg = $manager->decode($image);
 
-        $this->assertEqualsIgnoringCase('image/png', $interventionImg->toPng()->mediaType());
+        $this->assertEqualsIgnoringCase('image/png', $interventionImg->encode(new PngEncoder())->mediaType());
         $this->assertEquals(590, $interventionImg->width());
         $this->assertEquals(295, $interventionImg->height());
     }

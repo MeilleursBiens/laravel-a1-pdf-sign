@@ -9,6 +9,7 @@ use Intervention\Image\Drivers\Gd\Driver as GDDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager as IMG;
+use Intervention\Image\Typography\FontFactory;
 use LSNepomuceno\LaravelA1PdfSign\Exceptions\{InvalidImageDriverException};
 
 class SealImage
@@ -56,8 +57,8 @@ class SealImage
                 )->format($dueDateFormat)
             : null;
 
-        $callback = function ($font) use ($fontSize) {
-            $font->file(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
+        $callback = function (FontFactory $font) use ($fontSize) {
+            $font->filepath(dirname(__DIR__) . '/Resources/font/Roboto-Medium.ttf');
 
             $size = match ($fontSize) {
                 self::FONT_SIZE_SMALL => 15,
@@ -160,8 +161,8 @@ class SealImage
      */
     public function generateImage(string $returnType = self::RETURN_IMAGE_CONTENT): string
     {
-        $image = new IMG(driver: $this->imageDriver);
-        $image = $image->read($this->imagePathOrContent);
+        $manager = IMG::usingDriver($this->imageDriver::class);
+        $image = $manager->decode($this->imagePathOrContent);
 
         foreach ($this->textFieldsDefinitions as $text) {
             ['text' => $text, 'x' => $x, 'y' => $y, 'callback' => $callback] = $text;
@@ -169,9 +170,9 @@ class SealImage
         }
 
         if ($returnType === self::RETURN_IMAGE_CONTENT) {
-            return $image->encode(encoder: new JpegEncoder)->toString();
+            return (string) $image->encode(new JpegEncoder());
         }
 
-        return $image->encode(encoder: new JpegEncoder)->toDataUri();
+        return $image->encode(new JpegEncoder())->toDataUri();
     }
 }
